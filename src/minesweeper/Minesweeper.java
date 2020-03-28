@@ -130,6 +130,52 @@ public class Minesweeper {
     }
 
     /**
+     * Change state of given position
+     */
+    public void mark(Position position, Action action) {
+        if (gameStatus != GameStatus.RUNNING) {
+            return;
+        }
+
+        int x = position.x;
+        int y = position.y;
+
+        // check if position is on the board
+        if (isBetween(0, rows - 1, y) && isBetween(0, columns - 1, x)) {
+
+            // place mines and create game board if we try discover first time
+            if (!firstDiscover && action == Action.DISCOVER) {
+                firstDiscover = true;
+                placeMines(position);
+                createField();
+            }
+
+            Field field = fields[y][x];
+            FieldState currentState = field.getState();
+
+            if (action == Action.DISCOVER) {
+                if (currentState == FieldState.COVERED) {
+                    // TODO spread functionality
+                }
+            } else {
+                FieldState newState = null;
+
+                if (currentState == FieldState.MARKED) {
+                    newState = FieldState.COVERED;
+                } else if (currentState == FieldState.COVERED) {
+                    newState = FieldState.MARKED;
+                }
+
+                if (newState != null) {
+                    field.setState(newState);
+                }
+            }
+
+            // TODO updateStatus function
+        }
+    }
+
+    /**
      * Place mines away from the freeOfMines position
      */
     private void placeMines(Position freeOfMines) {
