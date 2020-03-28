@@ -1,3 +1,7 @@
+import ConsoleUI.ConsoleUI;
+import minesweeper.Minesweeper;
+import minesweeper.MinesweeperUI;
+
 public class Main {
 
     public static void main(String[] args) {
@@ -17,6 +21,18 @@ public class Main {
         } catch (NumberFormatException e) {
             System.out.println("Parameters must be a numbers!");
             return;
+        }
+
+        Minesweeper game = null;
+        MinesweeperUI ui = new ConsoleUI();
+
+        while (game == null) {
+            try {
+                game = new Minesweeper(columns, rows, countOfMines);
+                ui.play(game);
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
+            }
         }
     }
 
