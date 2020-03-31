@@ -1,11 +1,14 @@
 package ConsoleUI;
 
 import minesweeper.Action;
+import minesweeper.Field;
+import minesweeper.FieldState;
 import minesweeper.GameStatus;
 import minesweeper.Minesweeper;
 import minesweeper.MinesweeperUI;
 import minesweeper.Position;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -54,6 +57,25 @@ public class ConsoleUI implements MinesweeperUI {
 
     private int columnWidth() {
         return String.valueOf(game.getColumns()).length();
+    }
+
+    private void drawFields(Field[][] fields) {
+        String format = "%" + rowWidth() + "s";
+
+        String map = IntStream.range(1, game.getRows() + 1)
+          .mapToObj(x -> {
+              int index = x - 1;
+              String firstColumn = String.format(format, String.valueOf(x));
+              String columns = mapRow(fields[index]);
+              return firstColumn + "│" + columns + "│";
+          })
+          .collect(Collectors.joining("\n"));
+
+        int rowWidth = map.indexOf("\n");
+
+        System.out.println("—".repeat(rowWidth));
+        System.out.println(map);
+        System.out.println("—".repeat(rowWidth));
     }
 
     private void drawXCoordinates() {
@@ -106,6 +128,35 @@ public class ConsoleUI implements MinesweeperUI {
         return Optional.of(new Payload(position, action));
     }
 
+    private String mapRow(Field[] fields) {
+        String format = "%" + columnWidth() + "c";
+        int radix = 10;
+
+        return Arrays.stream(fields)
+          .map(field -> {
+              FieldState state = field.getState();
+              int number = field.getNumber();
+
+              if (state == FieldState.COVERED) {
+                  return Marker.COVERED;
+              } else if (state == FieldState.MARKED) {
+                  return Marker.MARKED;
+              } else {
+                  char c;
+                  if (number > 0) {
+                      c = Character.forDigit(number, radix);
+                  } else if (number == 0) {
+                      c = Marker.DISCOVERED;
+                  } else {
+                      c = Marker.MINED;
+                  }
+                  return c;
+              }
+          })
+          .map(c -> String.format(format, c))
+          .collect(Collectors.joining(" "));
+    }
+
     private int rowWidth() {
         return String.valueOf(game.getRows()).length();
     }
@@ -116,7 +167,7 @@ public class ConsoleUI implements MinesweeperUI {
 
         while (status == GameStatus.RUNNING) {
             drawXCoordinates();
-            // TODO draw field
+            drawFields(game.getFields());
 
             Optional<Payload> payload = getPositionAndAction();
 
@@ -128,5 +179,14 @@ public class ConsoleUI implements MinesweeperUI {
             game.mark(positionAndAction.position, positionAndAction.action);
             status = game.getGameStatus();
         }
+
+        Optional<Field[][]> finalBoard = game.getFinalBoard();
+
+        if (finalBoard.isPresent()) {
+            drawXCoordinates();
+            drawFields(finalBoard.get());
+        }
+
+        System.out.println(game.getGameStatus() == GameStatus.WIN ? "You won!" : "You lost");
     }
 }
