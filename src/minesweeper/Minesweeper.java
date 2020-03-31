@@ -62,9 +62,11 @@ public class Minesweeper {
         firstDiscover = false;
 
         // fill the game board with covered, empty fields
-        Field field = new Field(FieldState.COVERED, 0);
-        for (Field[] row : fields) {
-            Arrays.fill(row, field);
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < columns; x++) {
+                Field field = new Field(FieldState.COVERED, 0);
+                fields[y][x] = field;
+            }
         }
     }
 
