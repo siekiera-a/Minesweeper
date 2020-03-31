@@ -1,7 +1,9 @@
 package minesweeper;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 public class Minesweeper {
@@ -58,6 +60,12 @@ public class Minesweeper {
         mines.clear();
         gameStatus = GameStatus.RUNNING;
         firstDiscover = false;
+
+        // fill the game board with covered, empty fields
+        Field field = new Field(FieldState.COVERED, 0);
+        for (Field[] row : fields) {
+            Arrays.fill(row, field);
+        }
     }
 
     public int getColumns() {
@@ -74,6 +82,30 @@ public class Minesweeper {
 
     public GameStatus getGameStatus() {
         return gameStatus;
+    }
+
+    public Field[][] getFields() {
+        return fields;
+    }
+
+    /**
+     * return field with discovered mines
+     */
+    public Optional<Field[][]> getFinalBoard() {
+        if (gameStatus == GameStatus.RUNNING || gameStatus == GameStatus.NOT_STARTED) {
+            return Optional.empty();
+        }
+
+        // discover all mines
+        for (Field[] row : fields) {
+            for (Field field : row) {
+                if (field.getNumber() < 0) {
+                    field.setState(FieldState.DISCOVERED);
+                }
+            }
+        }
+
+        return Optional.of(fields);
     }
 
     /**
@@ -155,7 +187,7 @@ public class Minesweeper {
 
             if (action == Action.DISCOVER) {
                 if (currentState == FieldState.COVERED) {
-                    // TODO spread functionality
+                    spread(x, y);
                 }
             } else {
                 FieldState newState = null;
@@ -171,7 +203,7 @@ public class Minesweeper {
                 }
             }
 
-            // TODO updateStatus function
+            updateStatus();
         }
     }
 
@@ -200,5 +232,82 @@ public class Minesweeper {
             }
         }
     }
+
+    private void spread(int x, int y) {
+        // check if coordinates are on the game board
+        if (!(isBetween(0, rows - 1, y) && isBetween(0, columns - 1, x))) {
+            return;
+        }
+
+        Field field = fields[y][x];
+
+        // spread only on covered fields
+        if (field.getState() != FieldState.COVERED) {
+            return;
+        }
+
+        field.setState(FieldState.DISCOVERED);
+
+        // spread only on empty fields
+        if (field.getNumber() != 0) {
+            return;
+        }
+
+        for (int i = y - 1; i <= y + 1; i++) {
+            for (int j = x - 1; j <= x + 1; j++) {
+                // if coordinates are out of the game board, skip
+                if (!(isBetween(0, rows - 1, i) && isBetween(0, columns - 1, j))) {
+                    continue;
+                }
+
+                spread(j, i);
+            }
+        }
+    }
+
+    private void filterFields(FieldState state, List<Position> positions) {
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < columns; x++) {
+                if (fields[y][x].getState() == state) {
+                    positions.add(new Position(x, y));
+                }
+            }
+        }
+    }
+
+    private void updateStatus() {
+        if (mines.isEmpty()) {
+            return;
+        }
+
+        boolean anyMineDiscovered = Arrays.stream(fields)
+          .flatMap(Arrays::stream)
+          .anyMatch(field -> field.getNumber() < 0 && field.getState() == FieldState.DISCOVERED);
+
+        // if any mine is discovered, game is lost
+        if (anyMineDiscovered) {
+            gameStatus = GameStatus.LOSS;
+            return;
+        }
+
+        List<Position> positions = new ArrayList<>();
+        filterFields(FieldState.MARKED, positions);
+
+        // if count of marked fields is smaller than count of mines
+        // check also covered fields
+        if (positions.size() < mines.size()) {
+            filterFields(FieldState.COVERED, positions);
+        }
+
+        if (positions.size() == mines.size()) {
+            // remove all mines from list
+            // if list is empty, we won
+            positions.removeAll(mines);
+
+            if (positions.isEmpty()) {
+                gameStatus = GameStatus.WIN;
+            }
+        }
+     }
 
 }
