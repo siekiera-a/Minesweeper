@@ -23,16 +23,14 @@ public class Main {
             return;
         }
 
-        Minesweeper game = null;
+        Minesweeper game;
         MinesweeperUI ui = new ConsoleUI();
 
-        while (game == null) {
-            try {
-                game = new Minesweeper(columns, rows, countOfMines);
-                ui.play(game);
-            } catch (IllegalArgumentException e) {
-                System.out.println(e.getMessage());
-            }
+        try {
+            game = new Minesweeper(columns, rows, countOfMines);
+            ui.play(game);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
         }
     }
 

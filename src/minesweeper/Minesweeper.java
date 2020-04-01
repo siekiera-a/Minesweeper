@@ -33,17 +33,23 @@ public class Minesweeper {
     public Minesweeper(int columns, int rows, int countOfMines) throws IllegalArgumentException {
 
         if (!isBetween(MIN_COLUMNS, MAX_COLUMNS, columns)) {
-            throw new IllegalArgumentException("Illegal number of columns");
+            throw new IllegalArgumentException(
+              errorMessage("columns", columns, MIN_COLUMNS, MAX_COLUMNS)
+            );
         }
 
         if (!isBetween(MIN_ROWS, MAX_ROWS, rows)) {
-            throw new IllegalArgumentException("Illegal number of rows");
+            throw new IllegalArgumentException(
+              errorMessage("rows", rows, MIN_ROWS, MAX_ROWS)
+            );
         }
 
         int maxCountOfMines = columns * rows / 3;
 
         if (!isBetween(MIN_MINES, maxCountOfMines, countOfMines)) {
-            throw new IllegalArgumentException("Illegal number of mines");
+            throw new IllegalArgumentException(
+              errorMessage("mines", countOfMines, MIN_MINES, maxCountOfMines)
+            );
         }
 
         this.columns = columns;
@@ -110,6 +116,14 @@ public class Minesweeper {
         return Optional.of(fields);
     }
 
+    private String errorMessage(String data, int value, int min, int max) {
+        return String.format(
+          "Incorrect number of %s! Entered: %d. Value should be in range <%d;%d> (inclusive)",
+          data,
+          value, min, max
+        );
+    }
+
     /**
      * Calculate mines around given position
      *
@@ -157,7 +171,7 @@ public class Minesweeper {
     }
 
     /**
-     * check if the number is in the range <min; max>
+     * check if the number is in the range <min; max> (inclusive)
      */
     private boolean isBetween(int min, int max, int num) {
         return min <= num && num <= max;
@@ -310,6 +324,6 @@ public class Minesweeper {
                 gameStatus = GameStatus.WIN;
             }
         }
-     }
+    }
 
 }
